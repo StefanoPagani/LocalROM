@@ -45,12 +45,10 @@ classdef localizedReduction
                 %S
             end
             
-                        keyboard
             
             if  strcmp(obj.clusterType,'kmeansState')
                 [IDX, C] = kmeans(S', obj.clusterNumber)
-                
-%                  keyboard
+
                 
                 for iC = 1:obj.clusterNumber
                     obj.centroids{iC} = C(iC,:)';
@@ -64,8 +62,6 @@ classdef localizedReduction
             
             if  strcmp(obj.clusterType,'kmeansParam')
                 [IDX, C] = kmeans(SParam', obj.clusterNumber)
-                
-                keyboard
                 
                 for iC = 1:obj.clusterNumber
                     obj.centroids{iC} = C(iC,:)';
@@ -89,11 +85,52 @@ classdef localizedReduction
                         SnapClust{iC} =  [ SnapClust{iC}  , S(:, (iT-1)*(Nt+1)+obj.centroids{iC}(1): (iT-1)*(Nt+1)+obj.centroids{iC}(2) ) ];
                     end
                 end
-                
+                                   
             end
             
-
+            if  strcmp(obj.clusterType,'Global')
+                    [U, V, sigma] = obj.POD(S,1e-1);
+            end
+                
         end
+            
+        function [U, V, sigma] = POD(obj,S,tolP)
+            %POD proper orthogonal decomposition algorithm
+            
+            % correlation matrix method
+%                 [ns, Nh] = size(S);  % we assume that the snapshots are organized in column
+%                 if ns < Nh
+%                     % create the correlation matrix
+%                     C = S'*S;
+%                     % solve eigenvalue problem
+%                     [V, sigma, ~]     = svd(C);
+%                 else
+%                     % create the correlation matrix
+%                     C = S*S';
+%                     % solve eigenvalue problem
+%                     [V, sigma, ~]     = svd(C);
+%                 end
+
+            % svd method
+                [U,Sigma,V] = svd(S,'econ');
+                
+                sigma = diag(Sigma);
+                
+                if tolP < 1
+                    sigmaC = cumsum(sigma.^2);
+                    [val,ind] = max( tolP^2>=(1-sigmaC./sigmaC(end)) ) ;
+                    keyboard
+                else
+                    ind = min(tolP,size(V,2));
+                end
+                
+                V = V(:,1:ind);
+                U = U(:,1:ind);
+                
+            
+        end
+
+        
     end
 end
 

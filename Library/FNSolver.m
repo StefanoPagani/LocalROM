@@ -89,8 +89,88 @@ classdef FNSolver
                u(:,j+1) = AFOM \ FFOM;
    
             end
-     end
+        end
 
+     function [u,w] = solveROM(obj,newEpsilon,LROMclass)
+            %SOLVEFOM this method provides the Full-order solution of the
+            % FN problem
+            
+            V = LROMclass.V;
+            
+            % define the spatial and temporal mesh
+            dx = 1/obj.Nh;
+            x = [0:dx:1]';
+            
+            dt = (obj.tF-obj.t0)/obj.Nt;
+            t = obj.t0:dt:obj.tF;
+            
+            % diffusion matrix assembling
+            
+            h = diff(x(1:2));
+            A = sparse( diag(2./diff(x)) - diag(1./diff(x(1:end-1)),1) - diag(1./diff(x(1:end-1)),-1) ) ;
+            A(1,1) = 1./h;
+            A(end+1,end+1) = 1./h;  A(end-1,end) = -1./h;  A(end,end-1) = -1./h;
+            
+
+            A_ROM = V'*A*V;
+            
+            A_ref_ROM    = newEpsilon.^2.*A_ROM;            
+
+            % reaction matrix assembling            
+            M_ref = sparse( diag( 4*diff(x)/6 ) + diag(1*diff(x(1:end-1))/6,1) + diag(1*diff(x(1:end-1))/6,-1) ) ;
+            M_ref(1,1) = 2*h/6;
+            M_ref(end+1,end+1) = 2*h/6;  M_ref(end-1,end) = h./6;  M_ref(end,end-1) = h./6;
+            
+            M_ref_ROM = V'*M_ref*V ;
+            
+            M_ref_halfROM = V'*M_ref ;            
+            
+            M_ref_dt_ROM = newEpsilon/dt*M_ref_ROM ;
+            
+            
+            
+            % intial data
+            u = zeros(obj.Nh+1,obj.Nt+1);
+            uROM = V'*u;
+            w = u;
+
+            
+            % ionic term
+            f = @(v)  v.*(v-0.1).*(v-1); 
+
+            N = obj.Nh;
+            
+            c = 0;
+            
+            for j=1:obj.Nt
+
+                % update recovery variable
+                w(:,j+1) = 1/(1+dt*2)*( dt*c + w(:,j) + dt*obj.b*u(:,j) );
+                    
+                % left-hand side
+                AROM = M_ref_dt_ROM + A_ref_ROM;
+
+%                 keyboard
+
+                % right-hand side
+                FROM =  M_ref_dt_ROM*(uROM(:,j) ) ... %- A_ref*u(:,j+1)
+                     - M_ref_halfROM*f(u(:,j))  ...
+                    -M_ref_halfROM*w(:,j+1);
+
+                
+                
+               % external stimulus 
+               FROM       = FROM  +  V(1,:)'* 50000*(t(j+1))^3*exp(-15*t(j+1))*newEpsilon^2;
+
+               % update voltage
+               uROM(:,j+1) = AROM \ FROM;
+   
+               u(:,j+1)    = V*uROM(:,j+1);
+                
+            end
+        end
+        
+        
     end    
 end
 

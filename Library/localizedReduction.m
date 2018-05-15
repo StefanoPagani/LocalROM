@@ -16,10 +16,10 @@ classdef localizedReduction
             %LOCALIZEDREDUCTION Construct an instance of this class
             %   Detailed explanation goes here
             obj.clusterType   = inputType;
-            obj.clusterNumber = inputNclust;            
+            obj.clusterNumber = inputNclust; 
         end
         
-        function obj = offline(obj,nTrain)
+        function obj = offline(obj,nTrain,PODtol)
             %OFFLINE offline phase for the construction of the cluster and
             %the related basis functions
            
@@ -37,6 +37,7 @@ classdef localizedReduction
             %Snapshots matrix
             S = [];
             
+            rng('default')
             
             for iT = 1 : nTrain
                 SParam(iT) = 0.003 + rand(1,1)*(0.05-0.003);
@@ -47,14 +48,20 @@ classdef localizedReduction
             
             
             if  strcmp(obj.clusterType,'kmeansState')
-                [IDX, C] = kmeans(S', obj.clusterNumber)
+                [IDX, C] = kmeans(S', obj.clusterNumber);
 
                 
                 for iC = 1:obj.clusterNumber
                     obj.centroids{iC} = C(iC,:)';
                     
+                    % identify the snapshots related to the current cluster
                     SnapClust{iC} = S(: , find(IDX==iC));
+                    
+                    % compute POD
+                    [obj.V{iC}, ~ , sigma{iC}] = obj.POD(SnapClust{iC},PODtol);
                 end
+                
+                
                 
             end
             
@@ -66,7 +73,11 @@ classdef localizedReduction
                 for iC = 1:obj.clusterNumber
                     obj.centroids{iC} = C(iC,:)';
                     
+                    % identify the snapshots related to the current cluster
                     SnapClust{iC} = S(: , find(IDX==iC));
+                    
+                    % compute POD
+                    [obj.V{iC}, ~ , sigma{ic}] = obj.POD(SnapClust{iC},PODtol);
                 end
                 
             end
@@ -84,14 +95,23 @@ classdef localizedReduction
                         [(iT-1)*(Nt+1)+obj.centroids{iC}(1) ,  (iT-1)*(Nt+1)+obj.centroids{iC}(2) ]
                         SnapClust{iC} =  [ SnapClust{iC}  , S(:, (iT-1)*(Nt+1)+obj.centroids{iC}(1): (iT-1)*(Nt+1)+obj.centroids{iC}(2) ) ];
                     end
+                    
+                    for iC = 1:obj.clusterNumber
+                        % compute POD
+                        [obj.V{iC}, ~, sigma{ic}] = obj.POD(SnapClust{iC},PODtol);
+                    end
+                    
                 end
                                    
             end
             
             if  strcmp(obj.clusterType,'Global')
-                    [U, V, sigma] = obj.POD(S,1e-1);
+                    [obj.V, ~, sigma] = obj.POD(S,PODtol);
+                    
             end
                 
+            %obj.V
+            
         end
             
         function [U, V, sigma] = POD(obj,S,tolP)
@@ -119,7 +139,6 @@ classdef localizedReduction
                 if tolP < 1
                     sigmaC = cumsum(sigma.^2);
                     [val,ind] = max( tolP^2>=(1-sigmaC./sigmaC(end)) ) ;
-                    keyboard
                 else
                     ind = min(tolP,size(V,2));
                 end

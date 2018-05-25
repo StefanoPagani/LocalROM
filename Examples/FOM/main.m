@@ -9,7 +9,7 @@ param(4) = 2;
 FNS = FNSolver(param, 1024, 0, 2, 400)
 
 
-[u,w] = FNS.solveFOM(0.05);
+[u,w] = FNS.solveFOM(0.005);
 
 [X,Y] = meshgrid( linspace(0,FNS.L, FNS.Nh+1), linspace(FNS.t0,FNS.tF, FNS.Nt+1)  );
 
@@ -18,13 +18,16 @@ surf( X, Y , u')
 shading interp
 xlabel('x')
 ylabel('time')
-title('FOM solution: voltage')
-set(gca,'fontsize', 14)
+title('FOM voltage ($$\epsilon$$=0.005)', 'Interpreter', 'LaTeX')
+set(gca,'fontsize', 22)
+axis([ 0 1 0 2 -0.5 1.5 ])
 
 subplot(1,2,2)
 surf( X, Y , w')
 shading interp
 xlabel('x')
 ylabel('time')
-title('FOM solution: recovery variable')
-set(gca,'fontsize', 14)
+%title('FOM solution: recovery variable (\epsilon=0.05)')
+title('FOM recovery variable ($$\epsilon$$=0.005)', 'Interpreter', 'LaTeX')
+set(gca,'fontsize', 22)
+axis([ 0 1 0 2 0 0.2 ])

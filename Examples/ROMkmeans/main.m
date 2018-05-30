@@ -1,28 +1,32 @@
+
+% Main - local reduced-order model: convergence analysis 
+
+%   Copyright (c) 2018, Politecnico di Milano 
+%   localROM - Stefano Pagani <stefano.pagani at polimi.it>
+
+clc
 clear all
 close all
-% construction of the reduced-order model 
+
+% model parameters definition 
+param(1) = 1;      % domain lenght
+param(2) = 0.015;  % conducibility
+param(3) = 0.5;    % recovery parameter
+param(4) = 2;      % recovery parameter
+
+% loop over the number of clusters N_c
 
 for kclust = [2 4 6 8 10]
     
-    kclust
+    %kclust
 
-   
-%     LROM = offline(LROM, 50, 1e-8);
-%     keyboard
-    %LROM = localizedReduction('Time',kclust);
-
-    % construction of the FOM model
-
-
-    param(1) = 1; % domain lenght
-    param(2) = 0.015;  % conducibility
-    param(3) = 0.5;   % 
-    param(4) = 2;
-
+    % FN solver class constructor
     FNS = FNSolver(param, 1024, 0, 2, 400);
 
+    % dimension of the testing set
     N_test = 50;
 
+    % time step lenght
     dt = (FNS.tF-FNS.t0)/FNS.Nt;
 
 
@@ -31,92 +35,57 @@ for kclust = [2 4 6 8 10]
 
     for itol = 1:7
 
-        LROM = localizedReduction('kmeansParam',kclust);
+        % LROM class constructor
+        LROM = localizedReduction('PEBL',kclust);
+        
         % offline procedure
         LROM = offline(LROM, 35, tolvec(itol));
 
+        % for reproducibility
         rng('default')
-        % testing
+        
+        % loop over the test set
         for itest = 1:N_test
 
-            %ptest = 0.0035 + (itest-1)/(N_test-1) *(0.049-0.0035);
+            % random realization
             ptest = 0.003 + rand(1,1)*(0.05-0.003);
+            
+            % uniform grid
             %ptest = 0.02 + (itest-1)/(N_test-1) *(0.05-0.02);
 
-            
+            % reduced solver
             [u,w] = FNS.solveROM(ptest, LROM);
 
+            % full-order solver
             [uh,wh] = FNS.solveFOM(ptest);
 
-            err_u(itest) = dt * norm( u - uh, 2) ;
+            % \ell^2 error
+            % err_u(itest) = dt * norm( u - uh, 2) ;
             
-%             if itest==28
-%                 keyboard
-%             end
+            % H1 error
+            err_u(itest) = dt * sum( sqrt( diag( (u - uh)'*FNS.Xnorm*(u - uh) ) )./( 1 + sqrt( diag( (uh)'*FNS.Xnorm*(uh) ) ) ) ) ;
+
 
         end
 
+        % mean error over the test set
         err_vec(itol) = mean(err_u);
 
+        % computing the maximum number of basis functions among clusters
         n_basis(itol) = 0;
         for iC = 1:length(LROM.V)
             n_basis(itol) = max ( n_basis(itol) , size(LROM.V{iC},2) );
         end
     end
 
-
+    % error plot
     semilogy( n_basis, err_vec, '-o', 'linewidth', 2 )
     hold all
-    title('Reduction error')
-    xlabel('n')
+    title('Reduction error local ROM')
+    xlabel('$$max_{k=1,\ldots,N_c} n_k$$','Interpreter','Latex')
     ylabel('error')
     
 end
 
-legend( '2', '4', '6' , '8' , '10' )
+legend( '2', '4', '6', '8' , '10' )
 
-
-
-
-
-% 
-% % construction of the reduced-order model 
-% 
-% LROM = localizedReduction('kmeansState',4);
-% 
-% LROM = offline(LROM, 10, 1e-6);
-% 
-% 
-% %%
-% 
-% param(1) = 1; % domain lenght
-% param(2) = 0.015;  % conducibility
-% param(3) = 0.5;   % 
-% param(4) = 2;
-% 
-% FNS = FNSolver(param, 1024, 0, 2, 400)
-% 
-% [u,w] = FNS.solveROM(0.05, LROM);
-% [uh,wh] = FNS.solveFOM(0.05);
-% 
-% norm(uh-u)
-% 
-% [X,Y] = meshgrid( linspace(0,FNS.L, FNS.Nh+1), linspace(FNS.t0,FNS.tF, FNS.Nt+1)  );
-% 
-% subplot(1,2,1)
-% surf( X, Y , u')
-% shading interp
-% xlabel('x')
-% ylabel('time')
-% title('FOM solution: voltage')
-% set(gca,'fontsize', 14)
-% 
-% subplot(1,2,2)
-% surf( X, Y , w')
-% shading interp
-% xlabel('x')
-% ylabel('time')
-% title('FOM solution: recovery variable')
-% set(gca,'fontsize', 14)
-% 
-% 

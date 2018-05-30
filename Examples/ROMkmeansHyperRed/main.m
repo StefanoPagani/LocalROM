@@ -1,92 +1,99 @@
+
+% Main - local hyper-reduced-order model: convergence analysis 
+
+%   Copyright (c) 2018, Politecnico di Milano 
+%   localROM - Stefano Pagani <stefano.pagani at polimi.it>
+
+clc
 clear all
 close all
-% construction of the reduced-order model 
 
-for kclust = [5]
+% number of clusters N_c
+kclust = [5]
     
-%     kclust
 
-   
-%     LROM = offline(LROM, 50, 1e-8);
-%     keyboard
-    %LROM = localizedReduction('Time',kclust);
+% model parameters definition 
+param(1) = 1;      % domain lenght
+param(2) = 0.015;  % conducibility
+param(3) = 0.5;    % recovery parameter
+param(4) = 2;      % recovery parameter
 
-    % construction of the FOM model
+% FN solver class constructor
+FNS = FNSolver(param, 1024, 0, 2, 400);
 
+% dimension of the testing set
+N_test = 50;
 
-    param(1) = 1; % domain lenght
-    param(2) = 0.015;  % conducibility
-    param(3) = 0.5;   % 
-    param(4) = 2;
+% time step lenght
+dt = (FNS.tF-FNS.t0)/FNS.Nt;
 
-    FNS = FNSolver(param, 1024, 0, 2, 400);
+% vectors of tested POD tolerances
+tolvec = logspace(-1,-6,7);
+tolvecDEIM = [1e-2, 1e-3, 1e-4, 1e-5, 1e-6];
 
-    N_test = 50;
-
-    dt = (FNS.tF-FNS.t0)/FNS.Nt;
-
+% loop over the POD tolerance of the DEIM method
+for jtol = 1:length(tolvecDEIM)
 
     % loop over the POD tolerance
-    tolvec = logspace(-1,-6,7);
-    
-    tolvecDEIM = [1e-2, 1e-3, 1e-4, 1e-5, 1e-6];
 
-    for jtol = 1:length(tolvecDEIM)
+    for itol = 1:7
+
+        % LROM class constructor
+        LROM = localizedReduction('PEBL',kclust);
         
-        jtol
+        % offline procedure
+        LROM = offline(LROM, 35, tolvec(itol), tolvecDEIM(jtol));
 
-        for itol = 1:7
+        % for reproducibility
+        rng('default')
+        
+        % loop over the test set
+        for itest = 1:N_test
 
-            LROM = localizedReduction('PEBL',kclust);
-            % offline procedure
-            LROM = offline(LROM, 35, tolvec(itol), tolvecDEIM(jtol));
-
-%             keyboard
+            % random realization
+            ptest = 0.003 + rand(1,1)*(0.05-0.003);
             
-            rng('default')
-            % testing
-            for itest = 1:N_test
+            % uniform grid
+            %ptest = 0.02 + (itest-1)/(N_test-1) *(0.05-0.02);
 
-                %ptest = 0.0035 + (itest-1)/(N_test-1) *(0.049-0.0035);
-                ptest = 0.003 + rand(1,1)*(0.05-0.003);
-                %ptest = 0.02 + (itest-1)/(N_test-1) *(0.05-0.02);
+            % reduced solver
+            [u,w] = FNS.solveROMHyperRed(ptest, LROM);
 
+            % full-order solver
+            [uh,wh] = FNS.solveFOM(ptest);
 
-                [u,w] = FNS.solveROMHyperRed(ptest, LROM);
+            % \ell^2 error
+            % err_u(itest) = dt * norm( u - uh, 2) ;
+            
+            % H1 error
+            err_u(itest) = dt * sum( sqrt( diag( (u - uh)'*FNS.Xnorm*(u - uh) ) )./( 1 + sqrt( diag( (uh)'*FNS.Xnorm*(uh) ) ) ) ) ;
 
-                [uh,wh] = FNS.solveFOM(ptest);
-
-                err_u(itest) = dt * norm( u - uh, 2) ;
-
-    %             if itest==28
-    %                 keyboard
-    %             end
-
-            end
-
-            err_vec(itol) = mean(err_u);
-
-            n_basis(itol) = 0;
-            for iC = 1:length(LROM.V)
-                n_basis(itol) = max ( n_basis(itol) , size(LROM.V{iC},2) );
-            end
         end
 
+        % mean error over the test set
+        err_vec(itol) = mean(err_u);
 
-        semilogy( n_basis, err_vec, '-o', 'linewidth', 2 )
-        hold all
-        title('Reduction error')
-        xlabel('n')
-        ylabel('error')
-
-        pause(1)
-        
+        % computing the maximum number of basis functions among clusters
+        n_basis(itol) = 0;
+        for iC = 1:length(LROM.V)
+            n_basis(itol) = max ( n_basis(itol) , size(LROM.V{iC},2) );
+        end
     end
+
+
+    % error plot
+    semilogy( n_basis, err_vec, '-o', 'linewidth', 2 )
+    hold all
+    title('Reduction error local hyperROM')
+    xlabel('$$max_{k=1,\ldots,N_c} n_k$$','Interpreter','Latex')
+    ylabel('error')
+
+    pause(1)
+
 end
 
 legend('tol DEIM = 1e-2', 'tol DEIM = 1e-3', 'tol DEIM = 1e-4' , 'tol DEIM = 1e-5' , 'tol DEIM = 1e-6')
 
-%legend( '2', '4', '6' , '8' , '10' )
 
 
 

@@ -31,9 +31,9 @@ for kclust = [2 4 6 8 10]
 
 
     % loop over the POD tolerance
-    tolvec = logspace(-1,-6,7);
+    tolvec = logspace(-1,-6,2);
 
-    for itol = 1:7
+    for itol = 1:length(tolvec)
 
         % LROM class constructor
         LROM = localizedReduction('PEBL',kclust);
@@ -84,6 +84,8 @@ for kclust = [2 4 6 8 10]
     title('Reduction error local ROM')
     xlabel('$$max_{k=1,\ldots,N_c} n_k$$','Interpreter','Latex')
     ylabel('error')
+    
+    pause(1)
     
 end
 

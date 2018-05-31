@@ -16,7 +16,7 @@ param(4) = 2;      % recovery parameter
 
 % loop over the number of clusters N_c
 
-for kclust = [2 4 6 8 10]
+for kclust = [ 4 6 8 10]
     
     %kclust
 
@@ -24,22 +24,22 @@ for kclust = [2 4 6 8 10]
     FNS = FNSolver(param, 1024, 0, 2, 400);
 
     % dimension of the testing set
-    N_test = 50;
+    N_test = 25;
 
     % time step lenght
     dt = (FNS.tF-FNS.t0)/FNS.Nt;
 
 
     % loop over the POD tolerance
-    tolvec = logspace(-1,-6,7);
+    tolvec = logspace(-1,-4,2);
 
-    for itol = 1:7
+    for itol = 1:2
 
         % LROM class constructor
         LROM = localizedReduction('PEBL',kclust);
         
         % offline procedure
-        LROM = offline(LROM, 35, tolvec(itol));
+        LROM = offline(LROM, 15, tolvec(itol));
 
         % for reproducibility
         rng('default')
@@ -60,7 +60,7 @@ for kclust = [2 4 6 8 10]
             [uh,wh] = FNS.solveFOM(ptest);
 
             % \ell^2 error
-            % err_u(itest) = dt * norm( u - uh, 2) ;
+            %err_u(itest) = dt * norm( u - uh, 2) ;
             
             % H1 error
             err_u(itest) = dt * sum( sqrt( diag( (u - uh)'*FNS.Xnorm*(u - uh) ) )./( 1 + sqrt( diag( (uh)'*FNS.Xnorm*(uh) ) ) ) ) ;
@@ -84,6 +84,8 @@ for kclust = [2 4 6 8 10]
     title('Reduction error local ROM')
     xlabel('$$max_{k=1,\ldots,N_c} n_k$$','Interpreter','Latex')
     ylabel('error')
+    
+    pause(1)
     
 end
 

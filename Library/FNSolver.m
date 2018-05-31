@@ -298,6 +298,7 @@ classdef FNSolver
                         if iSelOld~=iSel
 
                             wROM = LROMclass.Vw{iSel}' * ( w(:,j) );
+                           
                             
                             OnesP = LROMclass.Vw{iSel}' * ones(size(w(:,j)));
                             

@@ -219,8 +219,8 @@ classdef localizedReduction
                 
                 obj.centroids{2} = SnapClust{1}(:,ind)./norm(SnapClust{1}(:,ind));
                 
-                indep1 = [];
-                indep2 = [];
+                indep{1} = [];
+                indep{2} = [];
                 
                 
                 for iS = 1:size(SnapClust{1},2)
@@ -231,22 +231,34 @@ classdef localizedReduction
                     EP2 = pdist( [ SnapClust{1}(:,iS) , obj.centroids{2}*obj.centroids{2}'*SnapClust{1}(:,iS) ]', 'squaredeuclidean'  );
                 
                     if EP1>=EP2
-                        indep2 = [indep2, iS];
+                        indep{2} = [indep{2}, iS];
                     else
-                        indep1 = [indep1, iS];
+                        indep{1} = [indep{1}, iS];
                     end
                 end
                 
                 % snapshots branching
-                SnapClust{2} = SnapClust{1}(:,indep2 + (mod(indep2,Nt+1)~=0) );
-                SnapClust{1} = SnapClust{1}(:,indep1 + (mod(indep1,Nt+1)~=0) );
+%                 SnapClust{2} = SnapClust{1}(:,indep{2} + (mod(indep{2},Nt+1)~=0) );
+%                 SnapClust{1} = SnapClust{1}(:,indep{1} + (mod(indep{1},Nt+1)~=0) );
                 
-                SnapClustW{2} = SnapClustW{1}(:,indep2 + (mod(indep2,Nt+1)~=0) );
-                SnapClustW{1} = SnapClustW{1}(:,indep1 + (mod(indep1,Nt+1)~=0) );
+                SnapClust{2} = SnapClust{1}(:,indep{2} );
+                SnapClust{1} = SnapClust{1}(:,indep{1} );
+                
+                
+%                 SnapClustW{2} = SnapClustW{1}(:,indep2 + (mod(indep2,Nt+1)~=0) );
+%                 SnapClustW{1} = SnapClustW{1}(:,indep1 + (mod(indep1,Nt+1)~=0) );
+                
+                SnapClustW{2} = SnapClustW{1}(:,indep{2} );
+                SnapClustW{1} = SnapClustW{1}(:,indep{1} );
+                
                 
                 % non-linear term
-                SnapClustNL{2} = SnapClustNL{1}(:,indep2 + (mod(indep2,Nt+1)~=0) );
-                SnapClustNL{1} = SnapClustNL{1}(:,indep1 + (mod(indep1,Nt+1)~=0) );
+                %SnapClustNL{2} = SnapClustNL{1}(:,indep2 + (mod(indep2,Nt+1)~=0) );
+                %SnapClustNL{1} = SnapClustNL{1}(:,indep1 + (mod(indep1,Nt+1)~=0) );
+                
+                SnapClustNL{2} = SnapClustNL{1}(:,indep{2} );
+                SnapClustNL{1} = SnapClustNL{1}(:,indep{1} );
+                
                 
                 % nodes collection
                 obj.tree{1} = {1,2};
@@ -269,8 +281,8 @@ classdef localizedReduction
 
                     obj.centroids{NC} = SnapClust{indsplit}(:,ind(indsplit))./norm(SnapClust{indsplit}(:,ind(indsplit)));
 
-                    indep1 = [];
-                    indep2 = [];
+                    indep{indsplit} = [];
+                    indep{NC} = [];
 
 
                     for iS = 1:size(SnapClust{indsplit},2)
@@ -280,27 +292,75 @@ classdef localizedReduction
                         EP2 = pdist( [ SnapClust{indsplit}(:,iS) , obj.centroids{NC}*obj.centroids{NC}'*SnapClust{indsplit}(:,iS) ]' , 'squaredeuclidean'  );
 
                         if EP1>=EP2
-                            indep2 = [indep2, iS];
+                            indep{NC} = [indep{NC}, iS];
                         else
-                            indep1 = [indep1, iS];
+                            indep{indsplit} = [indep{indsplit}, iS];
                         end
                     end
 
                     % snapshots branching                    
-                    SnapClust{NC} = SnapClust{indsplit}(:,indep2  );
-                    SnapClust{indsplit} = SnapClust{indsplit}(:,indep1 );
+                    SnapClust{NC} = SnapClust{indsplit}(:, indep{NC}  );
+                    SnapClust{indsplit} = SnapClust{indsplit}(:,indep{indsplit} );
 
-                    SnapClustW{NC} = SnapClustW{indsplit}(:,indep2  );
-                    SnapClustW{indsplit} = SnapClustW{indsplit}(:,indep1 );
+                    SnapClustW{NC} = SnapClustW{indsplit}(:,indep{NC}  );
+                    SnapClustW{indsplit} = SnapClustW{indsplit}(:,indep{indsplit} );
                     
-                    SnapClustNL{NC} = SnapClustNL{indsplit}(:,indep2  );
-                    SnapClustNL{indsplit} = SnapClustNL{indsplit}(:,indep1 );
+                    SnapClustNL{NC} = SnapClustNL{indsplit}(:,indep{NC}  );
+                    SnapClustNL{indsplit} = SnapClustNL{indsplit}(:,indep{indsplit} );
 
                     % tree nodes update
                     obj.tree{NC-1} = {indsplit,NC};
 
                     
                 end
+                
+                keyboard
+                
+                for iC = 1:obj.clusterNumber
+                    SnapClust{iC} = [];
+                    SnapClustW{iC} = [];
+                end
+                
+                for j=1:size(S,2)
+                    % distance wrt node 1
+                        EP1 = pdist( [ S(:,j) , obj.centroids{1}*obj.centroids{1}'*S(:,j) ]' , 'squaredeuclidean'  );
+                        % distance wrt node 2
+                        EP2 = pdist( [ S(:,j) , obj.centroids{2}*obj.centroids{2}'*S(:,j) ]' , 'squaredeuclidean'  );
+
+                        if EP1>=EP2
+                            iSel=2;
+                        else
+                            iSel=1;
+                        end
+                         
+                        % binary tree searching 
+                        for iTree = 2 : length(obj.tree) 
+                            
+                            if iSel == obj.tree{iTree}{1}
+                                
+                                i2 = obj.tree{iTree}{2};
+                                
+                                % distance wrt node iSel
+                                EP1 = pdist( [ S(:,j) , obj.centroids{iSel}*obj.centroids{iSel}'*S(:,j) ]' , 'squaredeuclidean'  );
+                                % distance wrt node i2    
+                                EP2 = pdist( [ S(:,j) , obj.centroids{i2}*obj.centroids{i2}'*S(:,j) ]' , 'squaredeuclidean'  );
+
+                                if EP1>=EP2
+                                    iSel=i2;
+                                end
+                            end
+                                
+                        end
+                        
+                        SnapClust{iSel} = [ SnapClust{iSel} , S(:,j+(mod(j,Nt+1)~=0)) ];
+                        SnapClustW{iSel} = [ SnapClustW{iSel} , Sw(:,j+(mod(j,Nt+1)~=0)) ];
+                        
+                end
+                    
+                
+                
+                
+                
 
                 % loop over final clusters
                 for iC = 1:obj.clusterNumber

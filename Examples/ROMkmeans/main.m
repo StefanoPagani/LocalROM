@@ -31,9 +31,11 @@ for kclust = [ 4 6 8 10]
 
 
     % loop over the POD tolerance
+
     tolvec = logspace(-1,-4,2);
 
     for itol = 1:2
+
 
         % LROM class constructor
         LROM = localizedReduction('PEBL',kclust);

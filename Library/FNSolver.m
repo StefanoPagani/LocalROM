@@ -187,6 +187,8 @@ classdef FNSolver
                 % intial data
                 u = zeros(obj.Nh+1,obj.Nt+1);
                 w = u;
+                
+                OnesP = ones(size(w(:,1)));
                               
 
             end
@@ -285,38 +287,40 @@ classdef FNSolver
                         [val,iSel] = max(distv);
                     end
                     
-                    % initial data
-                    if j==1
-                        
-                        uROM = zeros( size(M_ref_ROM{iSel}(:,1)) );
-                        wROM = zeros( size( LROMclass.Vw{iSel}(1,:)' ) );
-                        
-                        OnesP = LROMclass.Vw{iSel}' * ones(size(w(:,1)));
-                        
-                    else
-                        % projection on the current selected subspaces
-                        if iSelOld~=iSel
-
-                            wROM = LROMclass.Vw{iSel}' * ( w(:,j) );
-                           
-                            
-                            OnesP = LROMclass.Vw{iSel}' * ones(size(w(:,j)));
-                            
-                        end
-                    end
+%                     % initial data
+%                     if j==1
+%                         
+%                         uROM = zeros( size(M_ref_ROM{iSel}(:,1)) );
+%                         wROM = zeros( size( LROMclass.Vw{iSel}(1,:)' ) );
+%                         
+%                         OnesP = LROMclass.Vw{iSel}' * ones(size(w(:,1)));
+%                         
+%                     else
+%                         % projection on the current selected subspaces
+%                         if iSelOld~=iSel
+% 
+%                             wROM = LROMclass.Vw{iSel}' * ( w(:,j) );
+%                            
+%                             
+%                             OnesP = LROMclass.Vw{iSel}' * ones(size(w(:,j)));
+%                             
+%                         end
+%                     end
 
                     % solution updating
                     
                     % update recovery variable
-                    wROM = 1/(1+dt*2)*( dt*c*OnesP + wROM + dt*obj.b*(LROMclass.Vw{iSel}'*u(:,j)) );
+                    %wROM = 1/(1+dt*2)*( dt*c*OnesP + wROM + dt*obj.b*(LROMclass.Vw{iSel}'*u(:,j)) );
+                    w(:,j+1) = 1/(1+dt*2)*( dt*c*OnesP + w(:,j) + dt*obj.b*( u(:,j) ) );
+                    
                     
                     % left-hand side
                     AROM = M_ref_dt_ROM{iSel} + A_ref_ROM{iSel};
 
                     % right-hand side
                     FROM =  M_ref_dt_halfROM{iSel}*(u(:,j) ) ... 
-                         - M_ref_halfROM{iSel}*f(u(:,j))  ...
-                         -M_ref_w{iSel}*wROM;
+                         - M_ref_halfROM{iSel}*f(u(:,j),w(:,j+1)) ; % ...
+                         %-M_ref_w{iSel}*wROM;
                    
                     % external stimulus 
                     FROM  = FROM  +  V{iSel}(1,:)'*( 50000*(t(j+1))^3*exp(-15*t(j+1))*newEpsilon*newEpsilon );  
@@ -326,7 +330,7 @@ classdef FNSolver
    
                     % storaging of the solution
                     u(:,j+1)    = V{iSel}*uROM;
-                    w(:,j+1)    = LROMclass.Vw{iSel}*wROM;
+                    %w(:,j+1)    = LROMclass.Vw{iSel}*wROM;
                     
                     iSelOld = iSel;
                     

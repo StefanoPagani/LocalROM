@@ -16,7 +16,7 @@ param(4) = 2;      % recovery parameter
 
 % loop over the number of clusters N_c
 
-for kclust = [ 4 6 8 10]
+for kclust = [ 2 4 6 8 10]
     
     %kclust
 
@@ -24,7 +24,7 @@ for kclust = [ 4 6 8 10]
     FNS = FNSolver(param, 1024, 0, 2, 400);
 
     % dimension of the testing set
-    N_test = 25;
+    N_test = 50;
 
     % time step lenght
     dt = (FNS.tF-FNS.t0)/FNS.Nt;
@@ -32,16 +32,16 @@ for kclust = [ 4 6 8 10]
 
     % loop over the POD tolerance
 
-    tolvec = logspace(-1,-4,2);
+    tolvec = logspace(-1,-6,7);
 
-    for itol = 1:2
+    for itol = 1:7
 
 
         % LROM class constructor
         LROM = localizedReduction('PEBL',kclust);
         
         % offline procedure
-        LROM = offline(LROM, 15, tolvec(itol));
+        LROM = offline(LROM, 35, tolvec(itol));
 
         % for reproducibility
         rng('default')

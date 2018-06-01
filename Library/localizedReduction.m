@@ -70,8 +70,8 @@ classdef localizedReduction
             end
             
             % non linear term snapshots
-            f = @(v)  v.*(v-0.1).*(v-1); 
-            SNL = f(S);
+            f = @(v,w)  v.*(v-0.1).*(v-1) + w; 
+            SNL = f(S,Sw);
             
             % centroids computation: kmeans State
             if  strcmp(obj.clusterType,'kmeansState')
@@ -88,7 +88,7 @@ classdef localizedReduction
                     selSnap = find(IDX==iC) ; 
                     SnapClust{iC} = S(: , selSnap + (mod(selSnap,Nt+1)~=0)  );                    
                     SnapClustW{iC} = Sw(: , selSnap + (mod(selSnap,Nt+1)~=0)  );
-                    SnapClustNL{iC} = SNL(: , selSnap + (mod(selSnap,Nt+1)~=0)  );
+                    SnapClustNL{iC} = SNL(: , selSnap  );
                     
                     % compute POD
                     % voltage
@@ -168,8 +168,9 @@ classdef localizedReduction
                     for iT = 1 : nTrain
                         
                         selSnap = [(iT-1)*(Nt+1)+obj.centroids{iC}(1) :  (iT-1)*(Nt+1)+obj.centroids{iC}(2) ];
-                        SnapClust{iC} =  [ SnapClust{iC}  , S(:, selSnap  ) ];                    
-                        SnapClustW{iC} =  [ SnapClustW{iC}  , Sw(:, selSnap  ) ];                       
+                        %keyboard
+                        SnapClust{iC} =  [ SnapClust{iC}  , S(:, selSnap ) ];                    
+                        SnapClustW{iC} =  [ SnapClustW{iC}  , Sw(:, selSnap ) ];                       
                         SnapClustNL{iC} =  [ SnapClustNL{iC}  , SNL(:, selSnap  ) ];
                         
                     end
@@ -314,7 +315,7 @@ classdef localizedReduction
                     
                 end
                 
-                keyboard
+%                 keyboard
                 
                 for iC = 1:obj.clusterNumber
                     SnapClust{iC} = [];

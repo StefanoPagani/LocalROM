@@ -37,9 +37,11 @@ for jtol = 1:length(tolvecDEIM)
     % loop over the POD tolerance
 
     for itol = 1:7
+        
+        itol
 
         % LROM class constructor
-        LROM = localizedReduction('PEBL',kclust);
+        LROM = localizedReduction('Time',kclust);
         
         % offline procedure
         LROM = offline(LROM, 35, tolvec(itol), tolvecDEIM(jtol));

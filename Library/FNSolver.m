@@ -87,7 +87,7 @@ classdef FNSolver
 
             
             % ionic term
-            f = @(v)  v.*(v-0.1).*(v-1); 
+            f = @(v,w)  v.*(v-0.1).*(v-1) + w; 
 
             % space discretization lenght
             N = obj.Nh;
@@ -104,8 +104,8 @@ classdef FNSolver
 
                 % right-hand side
                 FFOM(1:N+1,1) =  M_ref_dt*(u(:,j) ) ... %- A_ref*u(:,j+1)
-                     - M_ref*f(u(:,j))  ...
-                    -M_ref*w(:,j+1);
+                     - M_ref*f(u(:,j),w(:,j+1)) ;  %...
+                    %-M_ref*w(:,j+1);
 
                 % external stimulus 
                 FFOM(1)       = FFOM(1) + 50000*(t(j+1))^3*exp(-15*t(j+1))*newEpsilon*newEpsilon;
@@ -161,7 +161,7 @@ classdef FNSolver
             
                 M_ref_ROM = V'*M_ref*V ;
                 M_ref_halfROM = V'*M_ref ;                
-                M_ref_w = V'*M_ref*LROMclass.Vw ; 
+                %M_ref_w = V'*M_ref*LROMclass.Vw ; 
                 M_ref_dt_ROM = newEpsilon/dt*M_ref_ROM ;
                 
                 % intial data
@@ -169,7 +169,7 @@ classdef FNSolver
                 uROM = V'*u;
                 w = u; 
                 wROM = LROMclass.Vw'*w;
-                OnesP = LROMclass.Vw'*ones(size(w(:,1)));
+                OnesP = ones(size(w(:,1)));
                 
 
             else
@@ -192,7 +192,7 @@ classdef FNSolver
             end
             
             % ionic term
-            f = @(v)  v.*(v-0.1).*(v-1); 
+            f = @(v,w)  v.*(v-0.1).*(v-1) + w; 
 
             % space discretization lenght
             N = obj.Nh;
@@ -205,15 +205,15 @@ classdef FNSolver
                 if strcmp(LROMclass.clusterType,'Global')
                     
                     % update recovery variable
-                    wROM(:,j+1) = 1/(1+dt*2)*( dt*c*OnesP + wROM(:,j) + dt*obj.b*(LROMclass.Vw'*u(:,j)) );
+                    w(:,j+1) = 1/(1+dt*2)*( dt*c*OnesP + w(:,j) + dt*obj.b*( u(:,j) ) );
                     
                     % left-hand side
                     AROM = M_ref_dt_ROM + A_ref_ROM;
                     
                     % right-hand side
                     FROM =  M_ref_dt_ROM*(uROM(:,j) ) ... %- A_ref*u(:,j+1)
-                         - M_ref_halfROM*f(u(:,j))  ...
-                        -M_ref_w*wROM(:,j+1);
+                         - M_ref_halfROM*f(u(:,j),w(:,j+1)) ; % ...
+                        %-M_ref_w*wROM(:,j+1);
                     
                     % external stimulus 
                     FROM       = FROM  +  V(1,:)'* ( 50000*(t(j+1))^3*exp(-15*t(j+1))*newEpsilon*newEpsilon );
@@ -223,7 +223,7 @@ classdef FNSolver
    
                     % storaging of the solution
                     u(:,j+1)    = V*uROM(:,j+1) ;
-                    w(:,j+1)    = LROMclass.Vw*wROM(:,j+1) ;
+                    %w(:,j+1)    = LROMclass.Vw*wROM(:,j+1) ;
                     
                 else
                     
@@ -397,6 +397,8 @@ classdef FNSolver
                 
 
             else
+                
+                IDEIMallNodes = [];
                 %loop over the clusters                
                 for iC = 1:LROMclass.clusterNumber
                     M_ref_ROM{iC} = V{iC}'*(M_ref*V{iC}) ;
@@ -409,8 +411,14 @@ classdef FNSolver
                     MD = (LROMclass.PMat{iC}'*LROMclass.VD{iC});
                     PDEIM = (LROMclass.VD{iC}) * ((MD)\eye(size(MD)));
                     M_ref_DEIM{iC} = V{iC}'*(M_ref * PDEIM) ;
+                    
+                    IDEIMallNodes = [IDEIMallNodes, LROMclass.iDEIM{iC} ];
                 
                 end
+                
+                IDEIMallNodes = unique(IDEIMallNodes);
+                
+                OnesP = ones(size(IDEIMallNodes'));
                 
                 % intial data
                 u = zeros(obj.Nh+1,obj.Nt+1);
@@ -419,7 +427,7 @@ classdef FNSolver
             end
         
             % ionic term
-            f = @(v)  v.*(v-0.1).*(v-1); 
+            f = @(v,w)  v.*(v-0.1).*(v-1) + w; 
 
             % space discretization dimension
             N = obj.Nh;
@@ -433,15 +441,17 @@ classdef FNSolver
                 if strcmp(LROMclass.clusterType,'Global')
                     
                     % update recovery variable
-                    wROM(:,j+1) = 1/(1+dt*2)*( dt*c*OnesP + wROM(:,j) + dt*obj.b*(LROMclass.Vw'*u(:,j)) );
+                    %wROM(:,j+1) = 1/(1+dt*2)*( dt*c*OnesP + wROM(:,j) + dt*obj.b*(LROMclass.Vw'*u(:,j)) );
+                    w(LROMclass.iDEIM,j+1) = 1/(1+dt*2)*( dt*c*ones(size(LROMclass.iDEIM')) + w(LROMclass.iDEIM,j) + dt*obj.b*( u(LROMclass.iDEIM,j)) );
+                    
                     
                     % left-hand side
                     AROM = M_ref_dt_ROM + A_ref_ROM;
                     
                     % right-hand side
                     FROM =  M_ref_dt_ROM*(uROM(:,j) ) ... 
-                        - M_ref_DEIM * f(u(LROMclass.iDEIM,j))   ... 
-                        -M_ref_w*wROM(:,j+1);
+                        - M_ref_DEIM * f(u(LROMclass.iDEIM,j), w(LROMclass.iDEIM,j+1)) ; %  ... 
+                        %-M_ref_w*wROM(:,j+1);
                     
                     % external stimulus 
                     FROM       = FROM  +  V(1,:)'* ( 50000*(t(j+1))^3*exp(-15*t(j+1))*newEpsilon*newEpsilon );
@@ -450,7 +460,7 @@ classdef FNSolver
                     uROM(:,j+1)  = AROM \ FROM;
    
                     u(:,j+1)    = V*uROM(:,j+1) ;
-                    w(:,j+1)    = LROMclass.Vw*wROM(:,j+1) ;
+                    %w(:,j+1)    = LROMclass.Vw*wROM(:,j+1) ;
                     
                 else
                     
@@ -513,34 +523,36 @@ classdef FNSolver
                         [val,iSel] = max(distv);
                     end
 
-                    % initial data
-                    if j==1
-                        uROM = zeros( size(M_ref_ROM{iSel}(:,1)) );
-                        wROM = zeros( size( LROMclass.Vw{iSel}(1,:)' ) );
-                        
-                        OnesP = LROMclass.Vw{iSel}' * ones(size(w(:,1)));
-                        
-                    else
-                        % projection over the current selected subspace
-                        if iSelOld~=iSel
-
-                            wROM = LROMclass.Vw{iSel}' * ( w(:,j) );
-                            
-                            OnesP = LROMclass.Vw{iSel}' * ones(size(w(:,j)));
-                            
-                        end
-                    end
+%                     % initial data
+%                     if j==1
+%                         uROM = zeros( size(M_ref_ROM{iSel}(:,1)) );
+%                         wROM = zeros( size( LROMclass.Vw{iSel}(1,:)' ) );
+%                         
+%                         %OnesP = LROMclass.Vw{iSel}' * ones(size(w(:,1)));
+%                         
+%                     else
+%                         % projection over the current selected subspace
+%                         if iSelOld~=iSel
+% 
+%                             wROM = LROMclass.Vw{iSel}' * ( w(:,j) );
+%                             
+%                             %OnesP = LROMclass.Vw{iSel}' * ones(size(w(:,j)));
+%                             
+%                         end
+%                     end
 
                     % update recovery variable
-                    wROM = 1/(1+dt*2)*( dt*c*OnesP + wROM + dt*obj.b*(LROMclass.Vw{iSel}'*u(:,j)) );
+                    %w(IDEIMallNodes,j+1) = 1/(1+dt*2)*( dt*c*OnesP + w(IDEIMallNodes,j+1) + dt*obj.b*(u(IDEIMallNodes,j)) );
+                    w(IDEIMallNodes,j+1) = 1/(1+dt*2)*( dt*c*ones(size(IDEIMallNodes')) + w(IDEIMallNodes,j) + dt*obj.b*( u(IDEIMallNodes,j)) );
+%                     keyboard
                     
                     % left-hand side
                     AROM = M_ref_dt_ROM{iSel} + A_ref_ROM{iSel};
 
                     % right-hand side
                     FROM =  M_ref_dt_halfROM{iSel}*(u(:,j) ) ... 
-                          - M_ref_DEIM{iSel} * f(u(LROMclass.iDEIM{iSel},j))  ... 
-                         -M_ref_w{iSel}*wROM;
+                          - M_ref_DEIM{iSel} * f(u(LROMclass.iDEIM{iSel},j),w(LROMclass.iDEIM{iSel},j+1)) ;  % ... 
+                         %-M_ref_w{iSel}*wROM;
                    
                     % external stimulus 
                     FROM       = FROM  +  V{iSel}(1,:)'*( 50000*(t(j+1))^3*exp(-15*t(j+1))*newEpsilon*newEpsilon );  
@@ -550,7 +562,7 @@ classdef FNSolver
    
                     % solution storaging
                     u(:,j+1)    = V{iSel}*uROM;
-                    w(:,j+1)    = LROMclass.Vw{iSel}*wROM;
+                    %w(:,j+1)    = LROMclass.Vw{iSel}*wROM;
                     
                     iSelOld = iSel;
                     

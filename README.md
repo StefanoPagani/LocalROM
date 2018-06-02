@@ -22,6 +22,8 @@ Examples
 * **FOM**:
 numerical approximation of the parametrized Fitzhugh-Nagumo membrane model for an instance of the parameter epsilon.
 
+![Full-order model approximation](/Figures/FOMexample.png)
+
 * **GlobalROMConvergence**:
 mean relative error convergence analysis with respect to the number of POD basis functions for the global reduced-order model.
 
@@ -30,6 +32,8 @@ mean relative error convergence analysis with respect to the number of POD basis
 
 * **LocalROM**:
 mean relative error convergence analysis with respect to the number of POD basis functions for the local reduced-order models (time-, parameter- and state-based).
+
+![Local ROM error convergence](/Figures/LocalROMConvergence.png)
 
 * **LocalROMHyperred**:
 mean relative error convergence analysis with respect to the number of POD basis functions for the local hyperreduced models (time-, parameter- and state-based).

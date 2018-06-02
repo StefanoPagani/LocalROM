@@ -1,16 +1,16 @@
 classdef localizedReduction
-    %LOCALIZEDREDUCTION This class implements the localized reduction
+    %LOCALIZEDREDUCTION This class implements the local reduction
     %strategies presented in the paper S. Pagani, A. Manzoni, A. Quarteroni. "Numerical approximation of
     %parametrized problems in cardiac electrophysiology by a local reduced
     %basis method", 2018
     
     %   Copyright (c) 2018, Politecnico di Milano 
-%   localROM - Stefano Pagani <stefano.pagani at polimi.it>
+    %   LocalROM - Stefano Pagani <stefano.pagani at polimi.it>
     
     
     properties
         V             % struct containing the basis function related to the selected clusters
-        centroids     % struct containing the centroids of the clusters   
+        centroids     % struct containing the centroids of the clusters. Possibilities: 'kmeansState', 'kmeansParam', 'Time', 'PEBL'   
         clusterType   % flag identifying the possible cluster technique
         clusterNumber % integer identifying the number of clusters
         tree          % PEBL structure

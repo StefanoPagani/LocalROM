@@ -2,7 +2,7 @@ classdef FNSolver
     %FNSOLVER implements a solver for the FitzHugh-Nagumo equations
     
     %   Copyright (c) 2018, Politecnico di Milano 
-    %   localROM - Stefano Pagani <stefano.pagani at polimi.it>
+    %   LocalROM - Stefano Pagani <stefano.pagani at polimi.it>
     
     properties
         L                % domain lenght
@@ -52,7 +52,7 @@ classdef FNSolver
         
         function [u,w] = solveFOM(obj,newEpsilon)
             %SOLVEFOM this method provides the Full-order solution of the
-            % FN problem
+            % FN problem using a 1st order semi-implicit time-advancing scheme
             
             % define the spatial and temporal mesh
             dx = 1/obj.Nh;
@@ -79,8 +79,7 @@ classdef FNSolver
             
             M_ref_dt = newEpsilon/dt*M_ref;
             
-            
-            
+                      
             % intial data
             u = zeros(obj.Nh+1,obj.Nt+1);
             w = u;
@@ -103,9 +102,9 @@ classdef FNSolver
                 AFOM(1:obj.Nh+1,1:obj.Nh+1) = M_ref_dt + A_ref ; 
 
                 % right-hand side
-                FFOM(1:N+1,1) =  M_ref_dt*(u(:,j) ) ... %- A_ref*u(:,j+1)
-                     - M_ref*f(u(:,j),w(:,j+1)) ;  %...
-                    %-M_ref*w(:,j+1);
+                FFOM(1:N+1,1) =  M_ref_dt*(u(:,j) ) ... 
+                     - M_ref*f(u(:,j),w(:,j+1)) ;  
+                    
 
                 % external stimulus 
                 FFOM(1)       = FFOM(1) + 50000*(t(j+1))^3*exp(-15*t(j+1))*newEpsilon*newEpsilon;
@@ -118,7 +117,7 @@ classdef FNSolver
 
      function [u,w] = solveROM(obj,newEpsilon,LROMclass)
             %SOLVEFOM this method provides the reduced-order solution of the
-            % FN problem
+            % FN problem using a 1st order semi-implicit time-advancing scheme
             
             V = LROMclass.V;
             
@@ -161,14 +160,12 @@ classdef FNSolver
             
                 M_ref_ROM = V'*M_ref*V ;
                 M_ref_halfROM = V'*M_ref ;                
-                %M_ref_w = V'*M_ref*LROMclass.Vw ; 
                 M_ref_dt_ROM = newEpsilon/dt*M_ref_ROM ;
                 
                 % intial data
                 u = zeros(obj.Nh+1,obj.Nt+1);
                 uROM = V'*u;
                 w = u; 
-                wROM = LROMclass.Vw'*w;
                 OnesP = ones(size(w(:,1)));
                 
 
@@ -180,7 +177,6 @@ classdef FNSolver
                     M_ref_halfROM{iC} = V{iC}'*M_ref ;            
                     M_ref_dt_ROM{iC} = V{iC}'*((newEpsilon/dt*M_ref)*V{iC});                    
                     M_ref_dt_halfROM{iC} = V{iC}'*( newEpsilon/dt*M_ref )  ;  
-                    M_ref_w{iC} = V{iC}'*(M_ref*LROMclass.Vw{iC}) ;
 
                 end
                 
@@ -213,9 +209,8 @@ classdef FNSolver
                     AROM = M_ref_dt_ROM + A_ref_ROM;
                     
                     % right-hand side
-                    FROM =  M_ref_dt_ROM*(uROM(:,j) ) ... %- A_ref*u(:,j+1)
-                         - M_ref_halfROM*f(u(:,j),w(:,j+1)) ; % ...
-                        %-M_ref_w*wROM(:,j+1);
+                    FROM =  M_ref_dt_ROM*(uROM(:,j) ) ... 
+                         - M_ref_halfROM*f(u(:,j),w(:,j+1)) ; 
                     
                     % external stimulus 
                     FROM       = FROM  +  V(1,:)'* ( 50000*(t(j+1))^3*exp(-15*t(j+1))*newEpsilon*newEpsilon );
@@ -225,7 +220,6 @@ classdef FNSolver
    
                     % storaging of the solution
                     u(:,j+1)    = V*uROM(:,j+1) ;
-                    %w(:,j+1)    = LROMclass.Vw*wROM(:,j+1) ;
                     
                 else
                     
@@ -287,30 +281,10 @@ classdef FNSolver
                         [val,iSel] = max(distv);
                     end
                     
-%                     % initial data
-%                     if j==1
-%                         
-%                         uROM = zeros( size(M_ref_ROM{iSel}(:,1)) );
-%                         wROM = zeros( size( LROMclass.Vw{iSel}(1,:)' ) );
-%                         
-%                         OnesP = LROMclass.Vw{iSel}' * ones(size(w(:,1)));
-%                         
-%                     else
-%                         % projection on the current selected subspaces
-%                         if iSelOld~=iSel
-% 
-%                             wROM = LROMclass.Vw{iSel}' * ( w(:,j) );
-%                            
-%                             
-%                             OnesP = LROMclass.Vw{iSel}' * ones(size(w(:,j)));
-%                             
-%                         end
-%                     end
 
                     % solution updating
                     
                     % update recovery variable
-                    %wROM = 1/(1+dt*2)*( dt*c*OnesP + wROM + dt*obj.b*(LROMclass.Vw{iSel}'*u(:,j)) );
                     w(:,j+1) = 1/(1+dt*2)*( dt*c*OnesP + w(:,j) + dt*obj.b*( u(:,j) ) );
                     
                     
@@ -319,8 +293,7 @@ classdef FNSolver
 
                     % right-hand side
                     FROM =  M_ref_dt_halfROM{iSel}*(u(:,j) ) ... 
-                         - M_ref_halfROM{iSel}*f(u(:,j),w(:,j+1)) ; % ...
-                         %-M_ref_w{iSel}*wROM;
+                         - M_ref_halfROM{iSel}*f(u(:,j),w(:,j+1)) ; 
                    
                     % external stimulus 
                     FROM  = FROM  +  V{iSel}(1,:)'*( 50000*(t(j+1))^3*exp(-15*t(j+1))*newEpsilon*newEpsilon );  
@@ -330,10 +303,8 @@ classdef FNSolver
    
                     % storaging of the solution
                     u(:,j+1)    = V{iSel}*uROM;
-                    %w(:,j+1)    = LROMclass.Vw{iSel}*wROM;
                     
-                    iSelOld = iSel;
-                    
+                   
                 end
            
             end
@@ -454,8 +425,7 @@ classdef FNSolver
                     
                     % right-hand side
                     FROM =  M_ref_dt_ROM*(uROM(:,j) ) ... 
-                        - M_ref_DEIM * f(u(LROMclass.iDEIM,j), w(LROMclass.iDEIM,j+1)) ; %  ... 
-                        %-M_ref_w*wROM(:,j+1);
+                        - M_ref_DEIM * f(u(LROMclass.iDEIM,j), w(LROMclass.iDEIM,j+1)) ; 
                     
                     % external stimulus 
                     FROM       = FROM  +  V(1,:)'* ( 50000*(t(j+1))^3*exp(-15*t(j+1))*newEpsilon*newEpsilon );
@@ -464,7 +434,6 @@ classdef FNSolver
                     uROM(:,j+1)  = AROM \ FROM;
    
                     u(:,j+1)    = V*uROM(:,j+1) ;
-                    %w(:,j+1)    = LROMclass.Vw*wROM(:,j+1) ;
                     
                 else
                     
@@ -527,28 +496,9 @@ classdef FNSolver
                         [val,iSel] = max(distv);
                     end
 
-%                     % initial data
-%                     if j==1
-%                         uROM = zeros( size(M_ref_ROM{iSel}(:,1)) );
-%                         wROM = zeros( size( LROMclass.Vw{iSel}(1,:)' ) );
-%                         
-%                         %OnesP = LROMclass.Vw{iSel}' * ones(size(w(:,1)));
-%                         
-%                     else
-%                         % projection over the current selected subspace
-%                         if iSelOld~=iSel
-% 
-%                             wROM = LROMclass.Vw{iSel}' * ( w(:,j) );
-%                             
-%                             %OnesP = LROMclass.Vw{iSel}' * ones(size(w(:,j)));
-%                             
-%                         end
-%                     end
-
                     % update recovery variable
-                    %w(IDEIMallNodes,j+1) = 1/(1+dt*2)*( dt*c*OnesP + w(IDEIMallNodes,j+1) + dt*obj.b*(u(IDEIMallNodes,j)) );
                     w(IDEIMallNodes,j+1) = 1/(1+dt*2)*( dt*c*ones(size(IDEIMallNodes')) + w(IDEIMallNodes,j) + dt*obj.b*( u(IDEIMallNodes,j)) );
-%                     keyboard
+
                     
                     % left-hand side
                     AROM = M_ref_dt_ROM{iSel} + A_ref_ROM{iSel};
@@ -556,7 +506,7 @@ classdef FNSolver
                     % right-hand side
                     FROM =  M_ref_dt_halfROM{iSel}*(u(:,j) ) ... 
                           - M_ref_DEIM{iSel} * f(u(LROMclass.iDEIM{iSel},j),w(LROMclass.iDEIM{iSel},j+1)) ;  % ... 
-                         %-M_ref_w{iSel}*wROM;
+                        
                    
                     % external stimulus 
                     FROM       = FROM  +  V{iSel}(1,:)'*( 50000*(t(j+1))^3*exp(-15*t(j+1))*newEpsilon*newEpsilon );  
@@ -566,7 +516,6 @@ classdef FNSolver
    
                     % solution storaging
                     u(:,j+1)    = V{iSel}*uROM;
-                    %w(:,j+1)    = LROMclass.Vw{iSel}*wROM;
                     
                     iSelOld = iSel;
                     

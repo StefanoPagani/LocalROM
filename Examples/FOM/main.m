@@ -1,7 +1,7 @@
-% Main - Solution of the full-order model for an instance of the parameter epsilon
+% Main - Numerical approximation of the full-order model for an instance of the parameter epsilon
 
 %   Copyright (c) 2018, Politecnico di Milano 
-%   localROM - Stefano Pagani <stefano.pagani at polimi.it>
+%   LocalROM - Stefano Pagani <stefano.pagani at polimi.it>
 
 clc
 clear all

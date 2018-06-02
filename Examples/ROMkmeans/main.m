@@ -2,7 +2,7 @@
 % Main - local reduced-order model: convergence analysis 
 
 %   Copyright (c) 2018, Politecnico di Milano 
-%   localROM - Stefano Pagani <stefano.pagani at polimi.it>
+%   LocalROM - Stefano Pagani <stefano.pagani at polimi.it>
 
 clc
 clear all
@@ -38,7 +38,7 @@ for kclust = [ 2 4 6 8 10]
 
 
         % LROM class constructor
-        LROM = localizedReduction('PEBL',kclust);
+        LROM = localizedReduction('PEBL',kclust); % Possibilities: 'kmeansState', 'kmeansParam', 'Time', 'PEBL'
         
         % offline procedure
         LROM = offline(LROM, 35, tolvec(itol));

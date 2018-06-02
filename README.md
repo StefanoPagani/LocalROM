@@ -9,6 +9,7 @@ Download and Installation
 -------
 
 To install the library, extract the ZIP file or clone the git repository.
+
 Run the script by running the setup file
 ```Matlab
 setPath
@@ -17,26 +18,20 @@ setPath
 Examples
 -------
 
-### FOM
+* **FOM**:
+numerical approximation of the parametrized Fitzhugh-Nagumo membrane model for an instance of the parameter epsilon.
 
-Numerical approximation of the parametrized Fitzhugh-
-Nagumo membrane model for an instance of the parameter epsilon.
+* **GlobalROMConvergence**:
+mean relative error convergence analysis with respect to the number of POD basis functions for the global reduced-order model.
 
-### ROMGlobalConvergence
+* **GlobalROMHyperred**:
+mean relative error convergence analysis with respect to the number of POD basis functions for the global hyperreduced model.
 
-Mean relative error convergence analysis with respect to the number of POD basis functions for the global reduced-order model.
+* **LocalROM**:
+mean relative error convergence analysis with respect to the number of POD basis functions for the local reduced-order models (time-, parameter- and state-based).
 
-### ROMHyperred
-
-Mean relative error convergence analysis with respect to the number of POD basis functions for the global hyperreduced model.
-
-### ROMkmeans
-
-Mean relative error convergence analysis with respect to the number of POD basis functions for the local reduced-order models (time-, parameter- and state-based).
-
-### ROMkmeansHyperRed
-
-Mean relative error convergence analysis with respect to the number of POD basis functions for the local hyperreduced models (time-, parameter- and state-based).
+* **LocalROMHyperred**:
+mean relative error convergence analysis with respect to the number of POD basis functions for the local hyperreduced models (time-, parameter- and state-based).
 
 
 License

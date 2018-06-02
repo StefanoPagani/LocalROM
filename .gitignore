@@ -3,6 +3,7 @@
 *.jpg
 *.fig
 *.tex
+.DS_Store
 
 _site
 .sass-cache

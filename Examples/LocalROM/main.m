@@ -38,7 +38,7 @@ for kclust = [ 2 4 6 8 10]
 
 
         % LROM class constructor
-        LROM = localizedReduction('PEBL',kclust); % Possibilities: 'kmeansState', 'kmeansParam', 'Time', 'PEBL'
+        LROM = localizedReduction('Time',kclust); % Possibilities: 'kmeansState', 'kmeansParam', 'Time', 'PEBL'
         
         % offline procedure
         LROM = offline(LROM, 35, tolvec(itol));

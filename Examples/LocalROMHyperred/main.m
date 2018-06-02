@@ -38,10 +38,10 @@ for jtol = 1:length(tolvecDEIM)
 
     for itol = 1:7
         
-        itol
+        %itol
 
         % LROM class constructor
-        LROM = localizedReduction('PEBL',kclust);  % Possibilities: 'kmeansState', 'kmeansParam', 'Time', 'PEBL'
+        LROM = localizedReduction('Time',kclust);  % Possibilities: 'kmeansState', 'kmeansParam', 'Time', 'PEBL'
         
         % offline procedure
         LROM = offline(LROM, 35, tolvec(itol), tolvecDEIM(jtol));

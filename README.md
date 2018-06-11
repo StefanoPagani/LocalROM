@@ -3,7 +3,7 @@
 **MATLAB(R) scripts for the numerical approximation of the Fitzhugh-Nagumo membrane model using local reduced-order models.**
 
 LocalROM has been developed at [MOX-Politecnico di Milano](https://mox.polimi.it) under the support of the ERC Advanced Grant [iHEART project](http://iheart.polimi.it). It includes straightforward implementations of the local reduced-order models presented in the submitted article:
->[**[PMQ18] S. Pagani, A. Manzoni, A. Quarteroni. Numerical approximation of parametrized problems in cardiac electrophysiology by a local reduced basis method**, submitted to CMAME, 2018.]
+>[**[PMQ18] S. Pagani, A. Manzoni, A. Quarteroni. Numerical approximation of parametrized problems in cardiac electrophysiology by a local reduced basis method**, accepted in Computer Methods in Applied Mechanics and Engineering, 2018.]
 
 
 Download and Installation
@@ -45,7 +45,7 @@ License
 Freely available subject to a BSD 2-Clause License.  
 Please cite this code by adding the following reference to your work:
 
->[**[PMQ18] S. Pagani, A. Manzoni, A. Quarteroni. Numerical approximation of parametrized problems in cardiac electrophysiology by a local reduced basis method**, submitted to CMAME, 2018.]
+>[**[PMQ18] S. Pagani, A. Manzoni, A. Quarteroni. Numerical approximation of parametrized problems in cardiac electrophysiology by a local reduced basis method**, accepted in Computer Methods in Applied Mechanics and Engineering, 2018.]
 
 Development
 -------
